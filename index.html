@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مغامرة الأعداد - الرياضيات الصف الرابع</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Tone.js for Sound Effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            min-height: 100vh;
+            user-select: none;
+            color: #f8fafc;
+        }
+
+        .bouncy-btn {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .bouncy-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+        }
+        .bouncy-btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glow-emerald {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        .glow-amber {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .number-digit {
+            transition: all 0.3s ease;
+        }
+        .number-digit:hover {
+            transform: scale(1.15) translateY(-4px);
+        }
+    </style>
+</head>
+<body class="pb-10 flex flex-col items-center">
+
+    <header class="w-full max-w-5xl bg-slate-900/90 border-b border-indigo-500/30 p-4 mb-6 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-4xl mx-auto flex justify-between items-center px-2">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="bg-gradient-to-tr from-amber-500 to-yellow-300 p-3 rounded-2xl text-slate-950 text-2xl font-black shadow-lg">
+                    <i class="fa-solid fa-square-root-variable"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black bg-gradient-to-r from-amber-300 via-amber-100 to-indigo-200 bg-clip-text text-transparent">
+                        مغامرة الأعداد الكبيرة 🚀
+                    </h1>
+                    <p class="text-xs md:text-sm text-indigo-300 font-semibold">مئات الألوف والملايين بالصيغ الثلاث (الرياضيات - الصف الرابع)</p>
+                </div>
+            </div>
+
+            <!-- Score & Level Badge -->
+            <div class="flex items-center gap-3">
+                <div class="bg-slate-800 border border-amber-500/30 px-4 py-2 rounded-2xl flex items-center gap-3 shadow-inner">
+                    <div class="text-amber-400 text-xl">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-[10px] text-indigo-300 font-bold uppercase">النقاط</span>
+                        <span id="score" class="text-xl font-black text-amber-300">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl px-4 space-y-6">
+
+        <section class="glass-card rounded-3xl p-5 border border-indigo-500/20 shadow-2xl">
+            <div class="flex items-center justify-between mb-3 px-2">
+                <h2 class="text-base md:text-lg font-bold text-indigo-200 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-amber-400"></i>
+                    جدول المنازل القيمية (مرجع مساعدة)
+                </h2>
+                <button onclick="toggleChart()" class="text-xs bg-indigo-900/60 hover:bg-indigo-800 text-indigo-300 px-3 py-1.5 rounded-xl border border-indigo-500/30 transition">
+                    <i id="chart-toggle-icon" class="fa-solid fa-eye-slash"></i> <span id="chart-toggle-text">إخفاء الجدول</span>
+                </button>
+            </div>
+
+            <!-- Interactive Place Value Chart Container -->
+            <div id="place-value-chart" class="overflow-x-auto transition-all duration-300">
+                <div class="min-w-[650px] grid grid-cols-3 gap-2 text-center text-xs md:text-sm font-bold">
+                    
+                    <!-- Units Period (Rightmost) -->
+                    <div class="bg-gradient-to-b from-emerald-900/40 to-emerald-950/60 border border-emerald-500/40 rounded-2xl p-2">
+                        <div class="bg-emerald-500/20 text-emerald-300 py-1.5 rounded-xl mb-2 font-black">
+                            دورة الواحدات 💎
+                        </div>
+                        <div class="grid grid-cols-3 gap-1">
+                            <div class="bg-slate-900/80 p-2 rounded-lg border border-emerald-500/20">
+                                <span class="block text-[10px] text-slate-400">آحاد</span>
+                                <span id="pv-u" class="text-base font-black text-emerald-300">0</span>
+                            </div>
+                            <div class="bg-slate-900/80 p-2 rounded-lg border border-emerald-500/20">
+                                <span class="block text-[10px] text-slate-400">عشرات</span>
+                                <span id="pv-t" class="text-base font-black text-emerald-300">0</span>
+                            </div>
+                            <div class="bg-slate-900/80 p-2 rounded-lg border border-emerald-500/20">
+                                <span class="block text-[10px] text-slate-400">مئات</span>
+                                <span id="pv-h" class="text-base font-black text-emerald-300">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thousands Period (Middle) -->
+                    <div class="bg-gradient-to-b from-blue-900/40 to-blue-950/60 border border-blue-500/40 rounded-2xl p-2">
+                        <div class="bg-blue-500/20 text-blue-300 py-1.5 rounded-xl mb-2 font-black">
+                            دورة الألوف 🚀
+                        </div>
+                        <div class="grid grid-cols-3 gap-1">
+                            <div class="bg-slate-900/80 p-2 rounded-lg border border-blue-500/20">
+                                <span class="block text-[10px] text-slate-400">آحاد الألوف</span>
+                                <span id="pv-k" class="text-base font-black text-blue-300">0</span>
+                            </div>
+                            <div class="bg-slate-900/80 p-2 rounded-lg border border-blue-500/20">
+                                <span class="block text-[10px] text-slate-400">عشرات الألوف</span>
+                                <span id="pv-tk" class="text-base font-black text-blue-300">0</span>
+                            </div>
+                            <div class="bg-slate-900/80 p-2 rounded-lg border border-blue-500/20">
+                                <span class="block text-[10px] text-slate-400">مئات الألوف</span>
+                                <span id="pv-hk" class="text-base font-black text-blue-300">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Millions Period (Leftmost) -->
+                    <div class="bg-gradient-to-b from-purple-900/40 to-purple-950/60 border border-purple-500/40 rounded-2xl p-2">
+                        <div class="bg-purple-500/20 text-purple-300 py-1.5 rounded-xl mb-2 font-black">
+                            دورة الملايين 🌟
+                        </div>
+                        <div class="grid grid-cols-3 gap-1">
+                            <div class="bg-slate-900/80 p-2 rounded-lg border border-purple-500/20">
+                                <span class="block text-[10px] text-slate-400">آحاد الملايين</span>
+                                <span id="pv-m" class="text-base font-black text-purple-300">0</span>
+                            </div>
+                            <div class="bg-slate-900/80 p-2 rounded-lg border border-purple-500/20">
+                                <span class="block text-[10px] text-slate-400">عشرات الملايين</span>
+                                <span id="pv-tm" class="text-base font-black text-purple-300">0</span>
+                            </div>
+                            <div class="bg-slate-900/80 p-2 rounded-lg border border-purple-500/20">
+                                <span class="block text-[10px] text-slate-400">مئات الملايين</span>
+                                <span id="pv-hm" class="text-base font-black text-purple-300">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-3 gap-2 md:gap-4">
+            <button onclick="switchMode('forms')" id="tab-forms" class="mode-tab bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black py-3.5 px-3 rounded-2xl shadow-lg bouncy-btn flex items-center justify-center gap-2 border border-amber-300 text-sm md:text-base">
+                <i class="fa-solid fa-shapes text-lg"></i>
+                <span>تحدي الصيغ الثلاث</span>
+            </button>
+            <button onclick="switchMode('builder')" id="tab-builder" class="mode-tab bg-slate-800/80 text-slate-300 hover:text-white font-bold py-3.5 px-3 rounded-2xl shadow-lg bouncy-btn flex items-center justify-center gap-2 border border-slate-700 text-sm md:text-base">
+                <i class="fa-solid fa-cubes text-lg"></i>
+                <span>باني الأعداد</span>
+            </button>
+            <button onclick="switchMode('match')" id="tab-match" class="mode-tab bg-slate-800/80 text-slate-300 hover:text-white font-bold py-3.5 px-3 rounded-2xl shadow-lg bouncy-btn flex items-center justify-center gap-2 border border-slate-700 text-sm md:text-base">
+                <i class="fa-solid fa-link text-lg"></i>
+                <span>مطابقة الصيغ</span>
+            </button>
+        </div>
+
+        <section id="sec-forms" class="game-sec glass-card rounded-3xl p-6 relative overflow-hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-700/60 pb-4 mb-6">
+                <div>
+                    <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-black px-3 py-1 rounded-full">النمط الأول</span>
+                    <h2 class="text-xl font-black text-white mt-1">حَوِّل بين الصيغ الرياضياتية ✍️</h2>
+                </div>
+                <!-- Range selector -->
+                <div class="flex items-center gap-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-700 text-xs font-bold">
+                    <span class="text-slate-400 px-2">النطاق:</span>
+                    <button onclick="setRange('thousands')" id="btn-range-k" class="range-btn bg-indigo-600 text-white px-3 py-1 rounded-lg">مئات الألوف</button>
+                    <button onclick="setRange('millions')" id="btn-range-m" class="range-btn text-slate-400 hover:text-white px-3 py-1 rounded-lg">الملايين 🌟</button>
+                </div>
+            </div>
+
+            <!-- Question Card Display -->
+            <div class="bg-gradient-to-b from-slate-900/90 to-slate-950/90 rounded-2xl p-6 border border-amber-500/20 text-center mb-6 shadow-inner">
+                <p id="forms-prompt-label" class="text-xs font-bold text-amber-400 mb-2">ما هي الصيغة القياسية للعدد التالي؟</p>
+                <div id="forms-question-text" class="text-lg md:text-2xl font-black text-slate-100 leading-relaxed min-h-[60px] flex items-center justify-center">
+                    <!-- Dynamic Question content -->
+                </div>
+            </div>
+
+            <!-- Choices Grid -->
+            <div id="forms-options-container" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <!-- Injected Options -->
+            </div>
+
+            <div id="forms-feedback" class="mt-4 p-3 rounded-2xl text-center font-bold text-sm hidden"></div>
+        </section>
+
+        <section id="sec-builder" class="game-sec glass-card rounded-3xl p-6 hidden">
+            <div class="border-b border-slate-700/60 pb-4 mb-6">
+                <span class="bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-black px-3 py-1 rounded-full">النمط الثاني</span>
+                <h2 class="text-xl font-black text-white mt-1">ابْنِ العدد في جدول المنازل 🏗️</h2>
+                <p class="text-xs text-slate-400 mt-1">اقرأ الصيغة اللفظية ثم ابْنِ العدد بوضع الأرقام في أماكنها الصحيحة:</p>
+            </div>
+
+            <!-- Word Form Prompt -->
+            <div class="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-5 text-center mb-6">
+                <span class="text-xs font-bold text-indigo-300 block mb-1">الصيغة اللفظية المطلوبة:</span>
+                <p id="builder-target-word" class="text-lg md:text-xl font-black text-amber-300">...</p>
+            </div>
+
+            <!-- Number Slots for Slots-Building -->
+            <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-700 mb-6">
+                <div class="text-center text-xs text-slate-400 mb-2 font-bold">العدد المبني حالياً:</div>
+                <div id="builder-slots-container" class="flex flex-wrap justify-center items-center gap-1 md:gap-2 dir-ltr">
+                    <!-- Slots dynamically injected -->
+                </div>
+            </div>
+
+            <!-- Pad / Buttons for Input -->
+            <div class="flex justify-center items-center gap-2 max-w-sm mx-auto mb-6">
+                <button onclick="clearBuilderSlots()" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 font-bold px-4 py-2.5 rounded-xl text-xs bouncy-btn">
+                    <i class="fa-solid fa-rotate-left ml-1"></i> مسح
+                </button>
+                <button onclick="checkBuilderAnswer()" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black py-2.5 px-6 rounded-xl text-sm shadow-lg border border-emerald-300 bouncy-btn">
+                    <i class="fa-solid fa-circle-check ml-1"></i> التحقق من الحل
+                </button>
+            </div>
+
+            <div id="builder-feedback" class="p-3 rounded-2xl text-center font-bold text-sm hidden"></div>
+        </section>
+
+        <section id="sec-match" class="game-sec glass-card rounded-3xl p-6 hidden">
+            <div class="border-b border-slate-700/60 pb-4 mb-6 flex justify-between items-center">
+                <div>
+                    <span class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-black px-3 py-1 rounded-full">النمط الثالث</span>
+                    <h2 class="text-xl font-black text-white mt-1">طابِق بين الصيغة اللفظية والقياسية 🧩</h2>
+                </div>
+                <button onclick="initMatchGame()" class="text-xs bg-purple-900/50 text-purple-200 border border-purple-500/30 hover:bg-purple-800 px-3 py-1.5 rounded-xl bouncy-btn">
+                    <i class="fa-solid fa-arrows-rotate ml-1"></i> خلط البطاقات
+                </button>
+            </div>
+
+            <!-- Grid of Cards -->
+            <div id="match-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                <!-- Cards Injected -->
+            </div>
+
+            <div id="match-feedback" class="mt-4 p-3 rounded-2xl text-center font-bold text-sm hidden"></div>
+        </section>
+
+        <footer class="glass-card rounded-2xl p-4 border border-slate-700/60 text-xs text-slate-300">
+            <div class="font-bold text-amber-400 mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-lightbulb"></i>
+                تذكر دائماً الصيغ الثلاث للعدد:
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-center font-semibold">
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                    <span class="text-amber-300 block font-bold mb-1">1. الصيغة القياسية:</span>
+                    تكتب فيها الأرقام فقط (مثال: <span dir="ltr" class="font-mono text-emerald-400 font-bold">254,109</span>)
+                </div>
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                    <span class="text-amber-300 block font-bold mb-1">2. الصيغة اللفظية:</span>
+                    تكتب فيها الكلمات (مثال: مئتان وأربعة وخمسون ألفاً ومائة وتسعة)
+                </div>
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                    <span class="text-amber-300 block font-bold mb-1">3. الصيغة التحليلية:</span>
+                    مجموع القيم المنزلية لأرقامه (<span dir="ltr" class="font-mono text-indigo-300 font-bold">9+100+4000+50000+200000</span>)
+                </div>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div class="glass-card rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border-2 border-amber-400/50 relative animate-bounce-once">
+            <div class="w-20 h-20 bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-lg border-2 border-amber-200">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <h3 class="text-2xl font-black text-white mb-2">عبقري الأعداد! 👑</h3>
+            <p class="text-slate-300 text-sm font-semibold mb-6">أحسنت! لقد أتقنت قراءة وكتابة الأعداد الكبيرة بنجاح ممتار!</p>
+            <button onclick="closeModal()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black py-3 rounded-xl shadow-lg border border-emerald-300 bouncy-btn">
+                متابعة المغامرة 🚀
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let synth, polySynth;
+
+        function initAudio() {
+            if (!synth) {
+                synth = new Tone.Synth().toDestination();
+                polySynth = new Tone.PolySynth().toDestination();
+            }
+        }
+
+        function playCorrectSound() {
+            try {
+                initAudio();
+                const now = Tone.now();
+                polySynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n", now);
+            } catch(e) {}
+        }
+
+        function playWrongSound() {
+            try {
+                initAudio();
+                const now = Tone.now();
+                synth.triggerAttackRelease("A2", "8n", now);
+            } catch(e) {}
+        }
+
+        function triggerConfetti() {
+            confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        let currentScore = 0;
+        let selectedRange = 'thousands'; // 'thousands' or 'millions'
+
+        // Arabic number word mappings for Grade 4 Saudi Curriculum
+        const unitsWords = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة"];
+        const tensWords = ["", "عشرة", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
+        const teensWords = ["عشر", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
+        const hundredsWords = ["", "مائة", "مائتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
+
+        // Converts 3-digit number to Arabic words
+        function convert3DigitsToArabic(n) {
+            if (n === 0) return "";
+            let h = Math.floor(n / 100);
+            let rem = n % 100;
+            let t = Math.floor(rem / 10);
+            let u = rem % 10;
+
+            let res = [];
+            if (h > 0) res.push(hundredsWords[h]);
+
+            if (rem > 0) {
+                if (rem >= 11 && rem <= 19) {
+                    res.push(teensWords[rem - 10]);
+                } else if (rem === 10) {
+                    res.push("عشرة");
+                } else {
+                    if (u > 0) res.push(unitsWords[u]);
+                    if (t > 0) res.push(tensWords[t]);
+                }
+            }
+            return res.join(" و");
+        }
+
+        // Full Number to Arabic Word Converter
+        function numberToArabicWords(num) {
+            if (num === 0) return "صفر";
+
+            let millions = Math.floor(num / 1000000);
+            let thousands = Math.floor((num % 1000000) / 1000);
+            let units = num % 1000;
+
+            let parts = [];
+
+            // Millions
+            if (millions > 0) {
+                if (millions === 1) parts.push("مليون");
+                else if (millions === 2) parts.push("مليونان");
+                else if (millions >= 3 && millions <= 10) parts.push(convert3DigitsToArabic(millions) + " ملايين");
+                else parts.push(convert3DigitsToArabic(millions) + " مليوناً");
+            }
+
+            // Thousands
+            if (thousands > 0) {
+                if (thousands === 1) parts.push("ألف");
+                else if (thousands === 2) parts.push("ألفان");
+                else if (thousands >= 3 && thousands <= 10) parts.push(convert3DigitsToArabic(thousands) + " آلاف");
+                else parts.push(convert3DigitsToArabic(thousands) + " ألفاً");
+            }
+
+            // Units
+            if (units > 0) {
+                parts.push(convert3DigitsToArabic(units));
+            }
+
+            return parts.join(" و");
+        }
+
+        // Convert Number to Expanded Form (الصيغة التحليلية)
+        function numberToExpandedForm(num) {
+            let str = num.toString();
+            let len = str.length;
+            let terms = [];
+
+            for (let i = 0; i < len; i++) {
+                let digit = parseInt(str[i]);
+                if (digit !== 0) {
+                    let placeValue = digit * Math.pow(10, len - 1 - i);
+                    terms.push(placeValue.toLocaleString('en-US'));
+                }
+            }
+            return terms.join(" + ");
+        }
+
+        // Format number with commas
+        function formatNum(num) {
+            return num.toLocaleString('en-US');
+        }
+
+        function addScore(pts) {
+            currentScore += pts;
+            document.getElementById('score').innerText = currentScore;
+        }
+
+        function updatePlaceValueChart(num) {
+            const str = num.toString().padStart(9, '0');
+            document.getElementById('pv-hm').innerText = str[0];
+            document.getElementById('pv-tm').innerText = str[1];
+            document.getElementById('pv-m').innerText  = str[2];
+            document.getElementById('pv-hk').innerText = str[3];
+            document.getElementById('pv-tk').innerText = str[4];
+            document.getElementById('pv-k').innerText  = str[5];
+            document.getElementById('pv-h').innerText  = str[6];
+            document.getElementById('pv-t').innerText  = str[7];
+            document.getElementById('pv-u').innerText  = str[8];
+        }
+
+        function toggleChart() {
+            const chart = document.getElementById('place-value-chart');
+            const icon = document.getElementById('chart-toggle-icon');
+            const text = document.getElementById('chart-toggle-text');
+
+            if (chart.classList.contains('hidden')) {
+                chart.classList.remove('hidden');
+                icon.className = 'fa-solid fa-eye-slash';
+                text.innerText = 'إخفاء الجدول';
+            } else {
+                chart.classList.add('hidden');
+                icon.className = 'fa-solid fa-eye';
+                text.innerText = 'إظهار الجدول';
+            }
+        }
+
+        function switchMode(mode) {
+            document.querySelectorAll('.game-sec').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.mode-tab').forEach(b => {
+                b.className = 'mode-tab bg-slate-800/80 text-slate-300 hover:text-white font-bold py-3.5 px-3 rounded-2xl shadow-lg bouncy-btn flex items-center justify-center gap-2 border border-slate-700 text-sm md:text-base';
+            });
+
+            const activeBtn = document.getElementById(`tab-${mode}`);
+            activeBtn.className = 'mode-tab bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black py-3.5 px-3 rounded-2xl shadow-lg bouncy-btn flex items-center justify-center gap-2 border border-amber-300 text-sm md:text-base';
+
+            document.getElementById(`sec-${mode}`).classList.remove('hidden');
+
+            if (mode === 'forms') generateFormsQuestion();
+            if (mode === 'builder') generateBuilderQuestion();
+            if (mode === 'match') initMatchGame();
+        }
+
+        function setRange(range) {
+            selectedRange = range;
+            document.getElementById('btn-range-k').className = range === 'thousands' ? 'range-btn bg-indigo-600 text-white px-3 py-1 rounded-lg' : 'range-btn text-slate-400 hover:text-white px-3 py-1 rounded-lg';
+            document.getElementById('btn-range-m').className = range === 'millions' ? 'range-btn bg-purple-600 text-white px-3 py-1 rounded-lg' : 'range-btn text-slate-400 hover:text-white px-3 py-1 rounded-lg';
+            generateFormsQuestion();
+        }
+
+        let currentFormsState = {};
+
+        function getRandomNumber() {
+            if (selectedRange === 'thousands') {
+                // 100,000 to 999,999
+                return Math.floor(100000 + Math.random() * 900000);
+            } else {
+                // 1,000,000 to 99,999,999
+                return Math.floor(1000000 + Math.random() * 99000000);
+            }
+        }
+
+        function generateFormsQuestion() {
+            const feedback = document.getElementById('forms-feedback');
+            feedback.classList.add('hidden');
+
+            const num = getRandomNumber();
+            updatePlaceValueChart(num);
+
+            const questionTypes = ['wordToStandard', 'expandedToStandard', 'standardToWord'];
+            const qType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+
+            currentFormsState = {
+                num: num,
+                correct: '',
+                type: qType
+            };
+
+            const labelEl = document.getElementById('forms-prompt-label');
+            const questionEl = document.getElementById('forms-question-text');
+            const optionsContainer = document.getElementById('forms-options-container');
+            optionsContainer.innerHTML = '';
+
+            let wrongNums = [
+                num + 10000,
+                num - 1000,
+                num + 100,
+                num * 10 > 999999999 ? Math.floor(num / 10) : num * 10
+            ].filter(n => n !== num && n > 0);
+
+            // Shuffle distractors
+            wrongNums.sort(() => Math.random() - 0.5);
+
+            if (qType === 'wordToStandard') {
+                labelEl.innerText = "اختر الصيغة القياسية (بالأرقام) المطابقة للصيغة اللفظية:";
+                questionEl.innerText = `"${numberToArabicWords(num)}"`;
+                currentFormsState.correct = formatNum(num);
+
+                let choices = [formatNum(num), formatNum(wrongNums[0]), formatNum(wrongNums[1]), formatNum(wrongNums[2])];
+                choices.sort(() => Math.random() - 0.5);
+
+                choices.forEach(c => {
+                    const btn = document.createElement('button');
+                    btn.className = 'bg-slate-900/80 hover:bg-indigo-900/50 border border-slate-700 hover:border-amber-400 text-indigo-200 font-bold p-4 rounded-2xl text-center text-lg dir-ltr bouncy-btn font-mono';
+                    btn.innerText = c;
+                    btn.onclick = () => checkFormsAnswer(c);
+                    optionsContainer.appendChild(btn);
+                });
+
+            } else if (qType === 'expandedToStandard') {
+                labelEl.innerText = "اختر الصيغة القياسية المطابقة للصيغة التحليلية التالية:";
+                questionEl.innerHTML = `<span dir="ltr" class="font-mono text-amber-300 text-base md:text-xl">${numberToExpandedForm(num)}</span>`;
+                currentFormsState.correct = formatNum(num);
+
+                let choices = [formatNum(num), formatNum(wrongNums[0]), formatNum(wrongNums[1]), formatNum(wrongNums[2])];
+                choices.sort(() => Math.random() - 0.5);
+
+                choices.forEach(c => {
+                    const btn = document.createElement('button');
+                    btn.className = 'bg-slate-900/80 hover:bg-indigo-900/50 border border-slate-700 hover:border-amber-400 text-indigo-200 font-bold p-4 rounded-2xl text-center text-lg dir-ltr bouncy-btn font-mono';
+                    btn.innerText = c;
+                    btn.onclick = () => checkFormsAnswer(c);
+                    optionsContainer.appendChild(btn);
+                });
+
+            } else { // standardToWord
+                labelEl.innerText = "اختر الصيغة اللفظية (بالكلمات) للعدد التالي:";
+                questionEl.innerHTML = `<span dir="ltr" class="font-mono text-emerald-400 text-2xl md:text-3xl">${formatNum(num)}</span>`;
+                currentFormsState.correct = numberToArabicWords(num);
+
+                let choices = [
+                    numberToArabicWords(num),
+                    numberToArabicWords(wrongNums[0]),
+                    numberToArabicWords(wrongNums[1]),
+                    numberToArabicWords(wrongNums[2])
+                ];
+                choices.sort(() => Math.random() - 0.5);
+
+                choices.forEach(c => {
+                    const btn = document.createElement('button');
+                    btn.className = 'bg-slate-900/80 hover:bg-indigo-900/50 border border-slate-700 hover:border-amber-400 text-slate-200 font-bold p-3.5 rounded-2xl text-right text-sm md:text-base bouncy-btn';
+                    btn.innerText = c;
+                    btn.onclick = () => checkFormsAnswer(c);
+                    optionsContainer.appendChild(btn);
+                });
+            }
+        }
+
+        function checkFormsAnswer(selected) {
+            const feedback = document.getElementById('forms-feedback');
+            feedback.classList.remove('hidden');
+
+            if (selected === currentFormsState.correct) {
+                playCorrectSound();
+                triggerConfetti();
+                addScore(10);
+                feedback.className = 'mt-4 p-3 rounded-2xl text-center font-bold text-sm bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 glow-emerald';
+                feedback.innerHTML = `✨ إجابة صحيحة بطل! (+10 نقاط)`;
+                setTimeout(generateFormsQuestion, 1800);
+            } else {
+                playWrongSound();
+                feedback.className = 'mt-4 p-3 rounded-2xl text-center font-bold text-sm bg-red-950/80 text-red-300 border border-red-500/40';
+                feedback.innerHTML = `❌ إجابة غير دقيقة! استعن بجدول المنازل بالأعلى وتأكد مرة أخرى.`;
+            }
+        }
+
+        let builderTargetNum = 0;
+        let builderSlots = [];
+
+        function generateBuilderQuestion() {
+            document.getElementById('builder-feedback').classList.add('hidden');
+            
+            // Generate a 6-digit number for Builder
+            builderTargetNum = Math.floor(100000 + Math.random() * 900000);
+            updatePlaceValueChart(builderTargetNum);
+
+            document.getElementById('builder-target-word').innerText = `"${numberToArabicWords(builderTargetNum)}"`;
+
+            builderSlots = new Array(6).fill("");
+            renderBuilderSlots();
+        }
+
+        function renderBuilderSlots() {
+            const container = document.getElementById('builder-slots-container');
+            container.innerHTML = '';
+
+            const numStr = builderTargetNum.toString();
+
+            // Reversed slots layout for Arabic RTL reading (from Hundreds of Thousands to Units from right to left)
+            for (let i = 0; i < 6; i++) {
+                const slotDiv = document.createElement('div');
+                slotDiv.className = 'flex flex-col items-center gap-1';
+
+                const select = document.createElement('select');
+                select.className = 'bg-slate-800 text-amber-300 font-mono font-black text-xl border-2 border-indigo-500/40 rounded-xl p-2 w-12 text-center focus:outline-none focus:border-amber-400';
+                
+                // Add empty default
+                let defaultOpt = document.createElement('option');
+                defaultOpt.value = "";
+                defaultOpt.text = "-";
+                select.appendChild(defaultOpt);
+
+                for (let d = 0; d <= 9; d++) {
+                    let opt = document.createElement('option');
+                    opt.value = d;
+                    opt.text = d;
+                    if (builderSlots[i] !== "" && parseInt(builderSlots[i]) === d) opt.selected = true;
+                    select.appendChild(opt);
+                }
+
+                select.onchange = (e) => {
+                    builderSlots[i] = e.target.value;
+                };
+
+                // Label for slot (Ordered right to left: الآحاد ثم العشرات ... حتى مئات الألوف)
+                const labels = ["آحاد", "عشرات", "مئات", "آحاد الألوف", "عشرات الألوف", "مئات الألوف"];
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'text-[10px] text-slate-400 font-bold';
+                labelSpan.innerText = labels[i];
+
+                slotDiv.appendChild(select);
+                slotDiv.appendChild(labelSpan);
+                container.appendChild(slotDiv);
+            }
+        }
+
+        function clearBuilderSlots() {
+            builderSlots = new Array(6).fill("");
+            renderBuilderSlots();
+        }
+
+        function checkBuilderAnswer() {
+            // Reconstruct the number string from reversed slots input
+            const builtStr = [...builderSlots].reverse().join('');
+            const feedback = document.getElementById('builder-feedback');
+            feedback.classList.remove('hidden');
+
+            if (builtStr === builderTargetNum.toString()) {
+                playCorrectSound();
+                triggerConfetti();
+                addScore(15);
+                feedback.className = 'p-3 rounded-2xl text-center font-bold text-sm bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 glow-emerald';
+                feedback.innerHTML = `🎉 ممتاز جداً! قمت ببناء العدد بشكل صحيح (+15 نقطة)`;
+                setTimeout(generateBuilderQuestion, 2000);
+            } else {
+                playWrongSound();
+                feedback.className = 'p-3 rounded-2xl text-center font-bold text-sm bg-red-950/80 text-red-300 border border-red-500/40';
+                feedback.innerHTML = `❌ حاول مرة أخرى! تأكد من القيمة المنزلية لكل رقم.`;
+            }
+        }
+
+        let matchCards = [];
+        let firstCard = null;
+        let secondCard = null;
+        let matchLock = false;
+
+        function initMatchGame() {
+            document.getElementById('match-feedback').classList.add('hidden');
+            const grid = document.getElementById('match-grid');
+            grid.innerHTML = '';
+            firstCard = null;
+            secondCard = null;
+            matchLock = false;
+
+            // Generate 3 pairs of numbers
+            let nums = [];
+            while (nums.length < 3) {
+                let n = Math.floor(100000 + Math.random() * 900000);
+                if (!nums.includes(n)) nums.push(n);
+            }
+
+            let cardsData = [];
+            nums.forEach((n, idx) => {
+                cardsData.push({ id: idx, type: 'standard', val: formatNum(n), raw: n });
+                cardsData.push({ id: idx, type: 'word', val: numberToArabicWords(n), raw: n });
+            });
+
+            // Shuffle
+            cardsData.sort(() => Math.random() - 0.5);
+
+            cardsData.forEach((c, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'match-card bg-slate-900/90 border-2 border-indigo-500/30 hover:border-amber-400 p-4 rounded-2xl cursor-pointer min-h-[100px] flex items-center justify-center text-center transition-all duration-300 bouncy-btn';
+                cardEl.dataset.id = c.id;
+                cardEl.dataset.index = index;
+
+                cardEl.innerHTML = `<span class="${c.type === 'standard' ? 'font-mono text-amber-300 text-lg font-bold dir-ltr' : 'text-xs md:text-sm font-bold text-indigo-100'}">${c.val}</span>`;
+                
+                cardEl.onclick = () => handleMatchClick(cardEl, c);
+                grid.appendChild(cardEl);
+            });
+        }
+
+        function handleMatchClick(cardEl, cardData) {
+            if (matchLock || cardEl.classList.contains('matched') || cardEl === firstCard) return;
+
+            initAudio();
+            cardEl.classList.add('border-amber-400', 'bg-indigo-950/80');
+
+            if (!firstCard) {
+                firstCard = cardEl;
+            } else {
+                secondCard = cardEl;
+                matchLock = true;
+
+                if (firstCard.dataset.id === secondCard.dataset.id) {
+                    // Match Success
+                    playCorrectSound();
+                    firstCard.classList.add('matched', 'bg-emerald-950/80', 'border-emerald-400', 'opacity-60');
+                    secondCard.classList.add('matched', 'bg-emerald-950/80', 'border-emerald-400', 'opacity-60');
+                    addScore(10);
+
+                    firstCard = null;
+                    secondCard = null;
+                    matchLock = false;
+
+                    // Check if all matched
+                    const remaining = document.querySelectorAll('.match-card:not(.matched)');
+                    if (remaining.length === 0) {
+                        triggerConfetti();
+                        const feedback = document.getElementById('match-feedback');
+                        feedback.classList.remove('hidden');
+                        feedback.className = 'mt-4 p-3 rounded-2xl text-center font-bold text-sm bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 glow-emerald';
+                        feedback.innerHTML = `🏆 أسطوري! طابقت جميع البطاقات بنجاح! (+30 نقطة إضافية)`;
+                        setTimeout(initMatchGame, 2500);
+                    }
+                } else {
+                    // Match Failed
+                    playWrongSound();
+                    firstCard.classList.add('border-red-500');
+                    secondCard.classList.add('border-red-500');
+
+                    setTimeout(() => {
+                        if (firstCard && secondCard) {
+                            firstCard.classList.remove('border-amber-400', 'border-red-500', 'bg-indigo-950/80');
+                            secondCard.classList.remove('border-amber-400', 'border-red-500', 'bg-indigo-950/80');
+                            firstCard = null;
+                            secondCard = null;
+                        }
+                        matchLock = false;
+                    }, 1000);
+                }
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('win-modal').classList.add('hidden');
+        }
+
+        window.onload = function() {
+            generateFormsQuestion();
+        };
+    </script>
+</body>
+</html>
